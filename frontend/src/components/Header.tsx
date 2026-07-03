@@ -9,7 +9,8 @@ import {
   QrCode, 
   Check, 
   LogOut,
-  ChevronDown
+  ChevronDown,
+  ArrowLeft
 } from 'lucide-react';
 
 export const Header: React.FC = () => {
@@ -84,7 +85,25 @@ export const Header: React.FC = () => {
       }}
     >
       {/* Page Title & Context Selection */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+        {currentScreen !== 'welcome' && currentScreen !== 'product-selection' && currentScreen !== 'dashboard' && (
+          <button
+            onClick={() => {
+              if (currentScreen === 'workspace') {
+                setCurrentScreen('dashboard');
+              } else if (currentScreen === 'stage-detail') {
+                setCurrentScreen('workspace');
+              } else if (currentScreen === 'qa-review' || currentScreen === 'admin-master' || currentScreen === 'reports') {
+                setCurrentScreen('dashboard');
+              }
+            }}
+            className="btn btn-ghost"
+            style={{ padding: 6, height: 32, width: 32, display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: 'var(--radius-sm)', marginRight: 4 }}
+            title="Go Back"
+          >
+            <ArrowLeft style={{ width: 16, height: 16 }} />
+          </button>
+        )}
         <h1 className="text-xl font-black uppercase tracking-wider" style={{ margin: 0 }}>
           {getScreenTitle()}
         </h1>

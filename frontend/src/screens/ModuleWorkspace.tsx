@@ -170,10 +170,24 @@ const CheckItem: React.FC<{ label: string; checked: boolean }> = ({ label, check
 
 // ── FQA Review Card ────────────────────────────────────────────────
 const FQAReviewCard: React.FC<{ doc: DocumentRecord; subStage: SubStage }> = ({ doc, subStage }) => {
+  const { currentRole, reviewDocument, selectedModuleId, selectedStageId } = useApp();
+  const [remarks, setRemarks] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
   const isApproved   = doc.status === 'APPROVED';
   const isRejected   = doc.status === 'REJECTED';
   const isPending    = doc.status === 'PENDING';
   const borderColor  = isApproved ? 'var(--color-tertiary)' : isRejected ? 'var(--color-status-critical-txt)' : 'var(--color-status-pending-txt)';
+
+  const hasClearance = currentRole === 'Admin' || currentRole === 'Final QA';
+
+  const handleReview = (status: 'APPROVED' | 'REJECTED') => {
+    setIsSubmitting(true);
+    setTimeout(() => {
+      reviewDocument(selectedModuleId, selectedStageId, subStage.id, doc.id, status, remarks || 'Specifications validated.');
+      setIsSubmitting(false);
+    }, 600);
+  };
 
   return (
     <div style={{
@@ -182,8 +196,44 @@ const FQAReviewCard: React.FC<{ doc: DocumentRecord; subStage: SubStage }> = ({ 
       borderRadius: 'var(--radius-sm)',
       padding: '14px 16px',
       backgroundColor: 'var(--color-surface-container-low)',
-      display: 'flex', flexDirection: 'column', gap: 10
+      display: 'flex', flexDirection: 'column', gap: 10,
+      position: 'relative',
+      overflow: 'hidden'
     }}>
+      {/* Visual Seal Stamp Background if Checked */}
+      {isApproved && (
+        <div style={{
+          position: 'absolute', right: '-15px', bottom: '-8px',
+          border: '2px dashed rgba(16, 185, 129, 0.4)',
+          borderRadius: '4px',
+          padding: '4px 8px',
+          color: 'var(--color-tertiary)',
+          fontSize: '9px', fontWeight: 900, fontFamily: 'var(--font-mono)',
+          transform: 'rotate(-12deg)',
+          opacity: 0.35,
+          userSelect: 'none', pointerEvents: 'none',
+          textTransform: 'uppercase'
+        }}>
+          QC PASSED
+        </div>
+      )}
+      {isRejected && (
+        <div style={{
+          position: 'absolute', right: '-15px', bottom: '-8px',
+          border: '2px dashed rgba(239, 68, 68, 0.4)',
+          borderRadius: '4px',
+          padding: '4px 8px',
+          color: 'var(--color-status-critical-txt)',
+          fontSize: '9px', fontWeight: 900, fontFamily: 'var(--font-mono)',
+          transform: 'rotate(-12deg)',
+          opacity: 0.35,
+          userSelect: 'none', pointerEvents: 'none',
+          textTransform: 'uppercase'
+        }}>
+          QC REJECTED
+        </div>
+      )}
+
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <span style={{ fontSize: 10, fontWeight: 900, fontFamily: 'var(--font-mono)', letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--color-surface-bright)' }}>
           Review by FQA
@@ -199,48 +249,122 @@ const FQAReviewCard: React.FC<{ doc: DocumentRecord; subStage: SubStage }> = ({ 
         </span>
       </div>
 
-      <div style={{ display: 'flex', gap: 8 }}>
-        <div style={{
-          flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
-          padding: '9px 0', borderRadius: 2,
-          border: `1px solid ${isApproved ? 'var(--color-tertiary)' : 'var(--color-outline-variant)'}`,
-          backgroundColor: isApproved ? 'rgba(16,185,129,0.10)' : 'transparent',
-          cursor: 'default'
-        }}>
-          <ThumbsUp style={{ width: 13, height: 13, color: isApproved ? 'var(--color-tertiary)' : 'var(--color-on-surface-variant)' }} />
-          <span style={{ fontSize: 10, fontWeight: 800, fontFamily: 'var(--font-mono)', color: isApproved ? 'var(--color-tertiary)' : 'var(--color-on-surface-variant)' }}>
-            OK
-          </span>
+      {isPending ? (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+          {hasClearance ? (
+            <>
+              <textarea
+                value={remarks}
+                onChange={e => setRemarks(e.target.value)}
+                placeholder="Enter audit remarks or observations..."
+                disabled={isSubmitting}
+                style={{
+                  width: '100%',
+                  height: '56px',
+                  backgroundColor: 'var(--color-surface-container-lowest)',
+                  border: '1px solid var(--color-outline-variant)',
+                  borderRadius: 'var(--radius-sm)',
+                  padding: '8px',
+                  fontSize: '11px',
+                  color: 'var(--color-surface-bright)',
+                  fontFamily: 'var(--font-body)',
+                  resize: 'none',
+                  outline: 'none'
+                }}
+              />
+              <div style={{ display: 'flex', gap: 8 }}>
+                <button
+                  onClick={() => handleReview('APPROVED')}
+                  disabled={isSubmitting}
+                  style={{
+                    flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
+                    padding: '8px 0', borderRadius: 'var(--radius-sm)',
+                    border: '1px solid var(--color-tertiary)',
+                    backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                    color: 'var(--color-tertiary)',
+                    cursor: 'pointer', fontSize: '10px', fontWeight: 900, fontFamily: 'var(--font-mono)',
+                    transition: 'all 0.2s ease'
+                  }}
+                  className="btn-ghost"
+                >
+                  <ThumbsUp style={{ width: 13, height: 13 }} />
+                  OK
+                </button>
+                <button
+                  onClick={() => handleReview('REJECTED')}
+                  disabled={isSubmitting}
+                  style={{
+                    flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
+                    padding: '8px 0', borderRadius: 'var(--radius-sm)',
+                    border: '1px solid var(--color-status-critical-txt)',
+                    backgroundColor: 'rgba(239, 68, 68, 0.1)',
+                    color: 'var(--color-status-critical-txt)',
+                    cursor: 'pointer', fontSize: '10px', fontWeight: 900, fontFamily: 'var(--font-mono)',
+                    transition: 'all 0.2s ease'
+                  }}
+                  className="btn-ghost"
+                >
+                  <ThumbsDown style={{ width: 13, height: 13 }} />
+                  NOT OK
+                </button>
+              </div>
+            </>
+          ) : (
+            <div style={{
+              display: 'flex', flexDirection: 'column', gap: 8,
+              padding: '10px', backgroundColor: 'rgba(251, 191, 36, 0.05)',
+              borderRadius: 'var(--radius-sm)', border: '1px solid rgba(251, 191, 36, 0.15)',
+              alignItems: 'center', textAlign: 'center'
+            }}>
+              <span style={{ fontSize: '10px', color: 'var(--color-status-pending-txt)', fontWeight: 700 }}>
+                🔒 Awaiting Reviewer Action
+              </span>
+              <span style={{ fontSize: '9px', color: 'var(--color-on-surface-variant)', lineHeight: 1.3 }}>
+                Final QA signature level required. Switch login level in toolbar to Final QA or Admin.
+              </span>
+            </div>
+          )}
         </div>
-        <div style={{
-          flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
-          padding: '9px 0', borderRadius: 2,
-          border: `1px solid ${isRejected ? 'var(--color-status-critical-txt)' : 'var(--color-outline-variant)'}`,
-          backgroundColor: isRejected ? 'rgba(248,113,113,0.10)' : 'transparent',
-          cursor: 'default'
-        }}>
-          <ThumbsDown style={{ width: 13, height: 13, color: isRejected ? 'var(--color-status-critical-txt)' : 'var(--color-on-surface-variant)' }} />
-          <span style={{ fontSize: 10, fontWeight: 800, fontFamily: 'var(--font-mono)', color: isRejected ? 'var(--color-status-critical-txt)' : 'var(--color-on-surface-variant)' }}>
-            NOT OK
-          </span>
-        </div>
-      </div>
+      ) : (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+          <div style={{ display: 'flex', gap: 8 }}>
+            <div style={{
+              flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
+              padding: '9px 0', borderRadius: 2,
+              border: `1px solid ${isApproved ? 'var(--color-tertiary)' : 'var(--color-outline-variant)'}`,
+              backgroundColor: isApproved ? 'rgba(16,185,129,0.10)' : 'transparent',
+              opacity: isApproved ? 1 : 0.4
+            }}>
+              <ThumbsUp style={{ width: 13, height: 13, color: isApproved ? 'var(--color-tertiary)' : 'var(--color-on-surface-variant)' }} />
+              <span style={{ fontSize: 10, fontWeight: 800, fontFamily: 'var(--font-mono)', color: isApproved ? 'var(--color-tertiary)' : 'var(--color-on-surface-variant)' }}>
+                OK
+              </span>
+            </div>
+            <div style={{
+              flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
+              padding: '9px 0', borderRadius: 2,
+              border: `1px solid ${isRejected ? 'var(--color-status-critical-txt)' : 'var(--color-outline-variant)'}`,
+              backgroundColor: isRejected ? 'rgba(248,113,113,0.10)' : 'transparent',
+              opacity: isRejected ? 1 : 0.4
+            }}>
+              <ThumbsDown style={{ width: 13, height: 13, color: isRejected ? 'var(--color-status-critical-txt)' : 'var(--color-on-surface-variant)' }} />
+              <span style={{ fontSize: 10, fontWeight: 800, fontFamily: 'var(--font-mono)', color: isRejected ? 'var(--color-status-critical-txt)' : 'var(--color-on-surface-variant)' }}>
+                NOT OK
+              </span>
+            </div>
+          </div>
 
-      {isPending && (
-        <div style={{ fontSize: 9, fontFamily: 'var(--font-mono)', color: 'var(--color-on-surface-variant)', textAlign: 'center', paddingTop: 2 }}>
-          Awaiting Final QA Agent review
-        </div>
-      )}
-
-      {doc.remarks && (
-        <div style={{
-          padding: '8px 10px', borderRadius: 2,
-          backgroundColor: 'var(--color-surface-container)',
-          border: '1px solid var(--color-outline-variant)'
-        }}>
-          <span style={{ fontSize: 10, fontFamily: 'var(--font-mono)', color: 'var(--color-surface-bright)', fontStyle: 'italic' }}>
-            "{doc.remarks}"
-          </span>
+          {doc.remarks && (
+            <div style={{
+              padding: '8px 10px', borderRadius: 2,
+              backgroundColor: 'var(--color-surface-container)',
+              border: '1px solid var(--color-outline-variant)'
+            }}>
+              <span style={{ fontSize: 10, fontFamily: 'var(--font-mono)', color: 'var(--color-surface-bright)', fontStyle: 'italic' }}>
+                "{doc.remarks}"
+              </span>
+            </div>
+          )}
         </div>
       )}
     </div>
@@ -579,64 +703,97 @@ export const ModuleWorkspace: React.FC = () => {
                 border: '1px solid var(--color-outline-variant)',
                 borderRadius: 'var(--radius-sm)',
                 padding: '16px 20px',
-                display: 'flex', alignItems: 'center', justifyContent: 'space-between'
+                display: 'flex', flexDirection: 'column', gap: 12
               }}>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                    <span style={{
-                      fontSize: 8, fontWeight: 900, fontFamily: 'var(--font-mono)',
-                      textTransform: 'uppercase', letterSpacing: '0.1em',
-                      color: 'var(--color-on-surface-variant)',
-                      backgroundColor: 'var(--color-surface-container)',
-                      padding: '2px 6px', borderRadius: 2
-                    }}>
-                      {activeStage?.name} Stage
-                    </span>
-                    {activeSubStage.isAte && (
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                       <span style={{
-                        fontSize: 8, fontWeight: 900, fontFamily: 'var(--font-mono)', textTransform: 'uppercase',
-                        backgroundColor: 'rgba(56,189,248,0.12)', color: 'var(--color-primary)',
-                        padding: '2px 6px', borderRadius: 2, border: '1px solid rgba(56,189,248,0.2)'
+                        fontSize: 8, fontWeight: 900, fontFamily: 'var(--font-mono)',
+                        textTransform: 'uppercase', letterSpacing: '0.1em',
+                        color: 'var(--color-on-surface-variant)',
+                        backgroundColor: 'var(--color-surface-container)',
+                        padding: '2px 6px', borderRadius: 2
                       }}>
-                        ATE Mode
+                        {activeStage?.name} Stage
                       </span>
+                      {activeSubStage.isAte && (
+                        <span style={{
+                          fontSize: 8, fontWeight: 900, fontFamily: 'var(--font-mono)', textTransform: 'uppercase',
+                          backgroundColor: 'rgba(56,189,248,0.12)', color: 'var(--color-primary)',
+                          padding: '2px 6px', borderRadius: 2, border: '1px solid rgba(56,189,248,0.2)'
+                        }}>
+                          ATE Mode
+                        </span>
+                      )}
+                    </div>
+                    <h2 style={{ margin: 0, fontSize: 17, fontWeight: 900, fontFamily: 'var(--font-display)', textTransform: 'uppercase', color: 'var(--color-surface-bright)', letterSpacing: '0.04em' }}>
+                      {activeSubStage.name}
+                    </h2>
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                    <StatusBadge status={activeSubStage.status} />
+                    {canUpload && !uploadMode && (
+                      <button
+                        onClick={() => setUploadMode(true)}
+                        style={{
+                          display: 'flex', alignItems: 'center', gap: 6,
+                          padding: '0 16px', height: 34,
+                          backgroundColor: 'var(--color-primary)', color: 'var(--color-on-primary)',
+                          border: 'none', borderRadius: 'var(--radius-sm)', cursor: 'pointer',
+                          fontSize: 10, fontWeight: 900, fontFamily: 'var(--font-mono)', textTransform: 'uppercase',
+                          letterSpacing: '0.06em'
+                        }}
+                      >
+                        <Upload style={{ width: 12, height: 12 }} />
+                        Upload Report
+                      </button>
+                    )}
+                    {uploadMode && (
+                      <button
+                        onClick={() => { setUploadMode(false); setFileName(''); }}
+                        style={{
+                          display: 'flex', alignItems: 'center', gap: 6,
+                          padding: '0 14px', height: 34,
+                          background: 'transparent', color: 'var(--color-on-surface-variant)',
+                          border: '1px solid var(--color-outline-variant)', borderRadius: 'var(--radius-sm)', cursor: 'pointer',
+                          fontSize: 10, fontWeight: 700, fontFamily: 'var(--font-mono)', textTransform: 'uppercase'
+                        }}
+                      >
+                        <X style={{ width: 12, height: 12 }} /> Cancel
+                      </button>
                     )}
                   </div>
-                  <h2 style={{ margin: 0, fontSize: 17, fontWeight: 900, fontFamily: 'var(--font-display)', textTransform: 'uppercase', color: 'var(--color-surface-bright)', letterSpacing: '0.04em' }}>
-                    {activeSubStage.name}
-                  </h2>
                 </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                  <StatusBadge status={activeSubStage.status} />
-                  {canUpload && !uploadMode && (
-                    <button
-                      onClick={() => setUploadMode(true)}
-                      style={{
-                        display: 'flex', alignItems: 'center', gap: 6,
-                        padding: '0 16px', height: 34,
-                        backgroundColor: 'var(--color-primary)', color: 'var(--color-on-primary)',
-                        border: 'none', borderRadius: 'var(--radius-sm)', cursor: 'pointer',
-                        fontSize: 10, fontWeight: 900, fontFamily: 'var(--font-mono)', textTransform: 'uppercase',
-                        letterSpacing: '0.06em'
-                      }}
-                    >
-                      <Upload style={{ width: 12, height: 12 }} />
-                      Upload Report
-                    </button>
-                  )}
-                  {uploadMode && (
-                    <button
-                      onClick={() => { setUploadMode(false); setFileName(''); }}
-                      style={{
-                        display: 'flex', alignItems: 'center', gap: 6,
-                        padding: '0 14px', height: 34,
-                        background: 'transparent', color: 'var(--color-on-surface-variant)',
-                        border: '1px solid var(--color-outline-variant)', borderRadius: 'var(--radius-sm)', cursor: 'pointer',
-                        fontSize: 10, fontWeight: 700, fontFamily: 'var(--font-mono)', textTransform: 'uppercase'
-                      }}
-                    >
-                      <X style={{ width: 12, height: 12 }} /> Cancel
-                    </button>
+
+                {/* Sub-stage details metadata panel */}
+                <div style={{
+                  display: 'flex', flexWrap: 'wrap', gap: '16px 24px',
+                  borderTop: '1px dashed var(--color-outline-variant)',
+                  paddingTop: '12px',
+                  marginTop: '4px'
+                }}>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                    <span style={{ fontSize: 8, fontFamily: 'var(--font-mono)', textTransform: 'uppercase', color: 'var(--color-on-surface-variant)' }}>SOP Reference</span>
+                    <span style={{ fontSize: 10, fontWeight: 700, color: 'var(--color-surface-bright)', fontFamily: 'var(--font-mono)' }}>SOP-{activeStage?.id.toUpperCase()}-0942-REV3</span>
+                  </div>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                    <span style={{ fontSize: 8, fontFamily: 'var(--font-mono)', textTransform: 'uppercase', color: 'var(--color-on-surface-variant)' }}>Design Standard</span>
+                    <span style={{ fontSize: 10, fontWeight: 700, color: 'var(--color-surface-bright)', fontFamily: 'var(--font-mono)' }}>BEL-STD-MIL-810G</span>
+                  </div>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                    <span style={{ fontSize: 8, fontFamily: 'var(--font-mono)', textTransform: 'uppercase', color: 'var(--color-on-surface-variant)' }}>Station Assignment</span>
+                    <span style={{ fontSize: 10, fontWeight: 700, color: 'var(--color-surface-bright)', fontFamily: 'var(--font-mono)' }}>STATION-{activeSubStage.isAte ? 'ATE-04' : 'QA-01'}</span>
+                  </div>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                    <span style={{ fontSize: 8, fontFamily: 'var(--font-mono)', textTransform: 'uppercase', color: 'var(--color-on-surface-variant)' }}>Env. Ambient Logger</span>
+                    <span style={{ fontSize: 10, fontWeight: 700, color: 'var(--color-surface-bright)', fontFamily: 'var(--font-mono)' }}>23.4 °C / 46.2% RH / ESD OK</span>
+                  </div>
+                  {activeSubStage.isAte && hasDocs && (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                      <span style={{ fontSize: 8, fontFamily: 'var(--font-mono)', textTransform: 'uppercase', color: 'var(--color-on-surface-variant)' }}>OCR Engine Integrity</span>
+                      <span style={{ fontSize: 10, fontWeight: 700, color: 'var(--color-tertiary)', fontFamily: 'var(--font-mono)' }}>99.2% CONFIDENCE</span>
+                    </div>
                   )}
                 </div>
               </div>
@@ -796,18 +953,45 @@ export const ModuleWorkspace: React.FC = () => {
                       {hasDocs ? rejectedQty : '—'}
                     </span>
                   </div>
-                  {/* Pass % */}
+                  {/* Pass % with visual circular ring */}
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 3, padding: '8px 12px' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
                       <Percent style={{ width: 10, height: 10, color: 'var(--color-on-surface-variant)' }} />
-                      <span style={{ fontSize: 8, fontWeight: 700, fontFamily: 'var(--font-mono)', textTransform: 'uppercase', letterSpacing: '0.07em', color: 'var(--color-on-surface-variant)' }}>Pass %</span>
+                      <span style={{ fontSize: 8, fontWeight: 700, fontFamily: 'var(--font-mono)', textTransform: 'uppercase', letterSpacing: '0.07em', color: 'var(--color-on-surface-variant)' }}>Yield Rate</span>
                     </div>
-                    <span style={{
-                      fontSize: 22, fontWeight: 900, fontFamily: 'var(--font-mono)', lineHeight: 1,
-                      color: !hasDocs ? 'var(--color-surface-bright)' : passPercent === 100 ? 'var(--color-tertiary)' : passPercent >= 80 ? 'var(--color-status-pending-txt)' : 'var(--color-status-critical-txt)'
-                    }}>
-                      {hasDocs ? `${passPercent}%` : '—'}
-                    </span>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginTop: 2 }}>
+                      {hasDocs ? (
+                        <>
+                          <div style={{ position: 'relative', width: 28, height: 28, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                            <svg width="28" height="28" viewBox="0 0 36 36" style={{ transform: 'rotate(-90deg)' }}>
+                              <circle cx="18" cy="18" r="15" fill="none" stroke="var(--color-surface-container)" strokeWidth="3" />
+                              <circle
+                                cx="18"
+                                cy="18"
+                                r="15"
+                                fill="none"
+                                stroke={passPercent === 100 ? 'var(--color-tertiary)' : passPercent >= 80 ? 'var(--color-status-pending-txt)' : 'var(--color-status-critical-txt)'}
+                                strokeWidth="3.5"
+                                strokeDasharray="94.2"
+                                strokeDashoffset={94.2 - (94.2 * passPercent) / 100}
+                                strokeLinecap="round"
+                                style={{ transition: 'stroke-dashoffset 0.4s ease' }}
+                              />
+                            </svg>
+                          </div>
+                          <span style={{
+                            fontSize: 22, fontWeight: 900, fontFamily: 'var(--font-mono)', lineHeight: 1,
+                            color: passPercent === 100 ? 'var(--color-tertiary)' : passPercent >= 80 ? 'var(--color-status-pending-txt)' : 'var(--color-status-critical-txt)'
+                          }}>
+                            {passPercent}%
+                          </span>
+                        </>
+                      ) : (
+                        <span style={{ fontSize: 22, fontWeight: 900, fontFamily: 'var(--font-mono)', color: 'var(--color-surface-bright)', lineHeight: 1 }}>
+                          —
+                        </span>
+                      )}
+                    </div>
                   </div>
                 </div>
               </div>
@@ -984,22 +1168,48 @@ export const ModuleWorkspace: React.FC = () => {
                   }}>
                     Cycle Time & Attribution
                   </div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 0 }}>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: 2, padding: '12px 20px', borderRight: '1px solid var(--color-outline-variant)' }}>
+                  <div style={{ display: 'flex', alignItems: 'stretch', gap: 0, flexWrap: 'wrap' }}>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 4, padding: '12px 20px', borderRight: '1px solid var(--color-outline-variant)', minWidth: '220px' }}>
                       <span style={{ fontSize: 8, fontFamily: 'var(--font-mono)', textTransform: 'uppercase', letterSpacing: '0.07em', color: 'var(--color-on-surface-variant)' }}>Start → End</span>
                       <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                         <Clock style={{ width: 13, height: 13, color: 'var(--color-primary)' }} />
                         <span style={{ fontSize: 14, fontWeight: 900, fontFamily: 'var(--font-mono)', color: 'var(--color-surface-bright)' }}>
                           {lastDoc.startTime} → {lastDoc.endTime}
                         </span>
-                        <span style={{ fontSize: 10, fontFamily: 'var(--font-mono)', color: 'var(--color-primary)' }}>({lastDoc.durationMinutes} min)</span>
+                        <span style={{ fontSize: 10, fontFamily: 'var(--font-mono)', color: 'var(--color-primary)', fontWeight: 800 }}>({lastDoc.durationMinutes} min)</span>
                       </div>
                     </div>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: 2, padding: '12px 20px' }}>
-                      <span style={{ fontSize: 8, fontFamily: 'var(--font-mono)', textTransform: 'uppercase', letterSpacing: '0.07em', color: 'var(--color-on-surface-variant)' }}>Submitted by</span>
-                      <span style={{ fontSize: 12, fontWeight: 700, fontFamily: 'var(--font-mono)', color: 'var(--color-surface-bright)' }}>
+                    
+                    {/* Visual Cycle Time Gauge Track */}
+                    <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: 6, padding: '12px 20px', flex: 1, minWidth: '240px', borderRight: '1px solid var(--color-outline-variant)' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <span style={{ fontSize: 8, fontFamily: 'var(--font-mono)', textTransform: 'uppercase', letterSpacing: '0.07em', color: 'var(--color-on-surface-variant)' }}>Cycle efficiency vs Target</span>
+                        <span style={{ fontSize: 8, fontFamily: 'var(--font-mono)', color: lastDoc.durationMinutes > 90 ? 'var(--color-status-pending-txt)' : 'var(--color-tertiary)', fontWeight: 800 }}>
+                          {lastDoc.durationMinutes <= 90 ? 'EFFICIENT' : 'OVER TARGET'}
+                        </span>
+                      </div>
+                      <div style={{ height: '6px', backgroundColor: 'var(--color-surface-container)', borderRadius: '3px', position: 'relative', overflow: 'hidden' }}>
+                        {/* Target line at 75% */}
+                        <div style={{ position: 'absolute', top: 0, bottom: 0, left: '75%', width: '2px', backgroundColor: 'var(--color-outline-variant)', zIndex: 2 }} title="Target threshold" />
+                        {/* Current run duration fill */}
+                        <div style={{
+                          position: 'absolute', top: 0, bottom: 0, left: 0,
+                          width: `${Math.min(100, (lastDoc.durationMinutes / 120) * 100)}%`,
+                          backgroundColor: lastDoc.durationMinutes > 90 ? 'var(--color-status-pending-txt)' : 'var(--color-tertiary)',
+                          transition: 'width 0.5s ease',
+                          borderRadius: '3px'
+                        }} />
+                      </div>
+                    </div>
+
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 4, padding: '12px 20px', minWidth: '280px' }}>
+                      <span style={{ fontSize: 8, fontFamily: 'var(--font-mono)', textTransform: 'uppercase', letterSpacing: '0.07em', color: 'var(--color-on-surface-variant)' }}>Verified operator signature</span>
+                      <span style={{ fontSize: 12, fontWeight: 700, fontFamily: 'var(--font-mono)', color: 'var(--color-surface-bright)', display: 'flex', alignItems: 'center', gap: 6 }}>
+                        <div style={{ width: 14, height: 14, borderRadius: '50%', backgroundColor: 'var(--color-surface-container-highest)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 7, fontWeight: 900, color: 'var(--color-primary)' }}>
+                          {lastDoc.uploadedBy.charAt(0)}
+                        </div>
                         {lastDoc.uploadedBy}
-                        <span style={{ fontWeight: 400, color: 'var(--color-on-surface-variant)', marginLeft: 6 }}>({lastDoc.uploadedRole}) · {lastDoc.timestamp}</span>
+                        <span style={{ fontWeight: 400, color: 'var(--color-on-surface-variant)', fontSize: 10 }}>({lastDoc.uploadedRole}) · {lastDoc.timestamp}</span>
                       </span>
                     </div>
                   </div>
