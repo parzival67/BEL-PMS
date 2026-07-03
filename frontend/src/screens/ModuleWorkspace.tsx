@@ -2,23 +2,15 @@ import React, { useState, useEffect } from 'react';
 import { useApp } from '../context/AppContext';
 import type { Stage, SubStage, DocumentRecord } from '../context/AppContext';
 import {
-  ArrowLeft,
   ChevronDown,
   ChevronRight,
   ChevronLeft,
   Upload,
   FileText,
-  CheckCircle2,
-  XCircle,
   Clock,
-  AlertCircle,
   Eye,
   Check,
   X,
-  FileCheck,
-  AlertOctagon,
-  HelpCircle,
-  ArrowLeftRight,
   Inbox,
   ThumbsUp,
   ThumbsDown,
@@ -113,12 +105,14 @@ const MetricCell: React.FC<{
 const DocRow: React.FC<{ doc: DocumentRecord; onPreview: () => void }> = ({ doc, onPreview }) => (
   <div style={{
     display: 'flex', alignItems: 'center', gap: 10,
-    padding: '8px 12px',
-    borderRadius: 'var(--radius-sm)',
-    backgroundColor: 'var(--color-surface-container)',
+    padding: '12px 14px',
+    borderRadius: 'var(--radius-md)',
+    backgroundColor: 'var(--color-surface-container-low)',
     border: '1px solid var(--color-outline-variant)'
   }}>
-    <FileText style={{ width: 14, height: 14, color: 'var(--color-primary)', flexShrink: 0 }} />
+    <div style={{ width: 32, height: 32, borderRadius: 'var(--radius-sm)', backgroundColor: 'rgba(56,189,248,0.12)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+      <FileText style={{ width: 15, height: 15, color: 'var(--color-primary)' }} />
+    </div>
     <div style={{ flex: 1, minWidth: 0 }}>
       <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--color-surface-bright)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
         {doc.fileName}
@@ -383,10 +377,7 @@ export const ModuleWorkspace: React.FC = () => {
     selectedModuleId,
     setSelectedStageId,
     setSelectedSubStageId,
-    setCurrentScreen,
-    uploadSubStageDocument,
-    currentRole,
-    addNotification
+    uploadSubStageDocument
   } = useApp();
 
   // ── Context resolution ──────────────────────────────────────────
@@ -452,7 +443,6 @@ export const ModuleWorkspace: React.FC = () => {
     } catch { return 0; }
   })();
 
-  const isReadOnly    = activeSubStage?.status === 'completed' || activeSubStage?.status === 'pending_review';
   const canUpload     = activeSubStage?.status === 'running' || activeSubStage?.status === 'rejected';
 
   const selectNode = (stageId: string, subId: string) => {
@@ -503,15 +493,8 @@ export const ModuleWorkspace: React.FC = () => {
         backgroundColor: 'var(--color-surface-container-lowest)',
         flexShrink: 0, gap: 16
       }}>
-        {/* Back + Title */}
+        {/* Title */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-          <button
-            onClick={() => setCurrentScreen('dashboard')}
-            className="btn btn-ghost"
-            style={{ padding: 6, height: 32, width: 32, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-          >
-            <ArrowLeft style={{ width: 15, height: 15 }} />
-          </button>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
             <span style={{ fontSize: 9, fontFamily: 'var(--font-mono)', color: 'var(--color-on-surface-variant)', textTransform: 'uppercase', letterSpacing: '0.07em' }}>
               {activeProduct?.name} · Module Workspace
@@ -540,26 +523,26 @@ export const ModuleWorkspace: React.FC = () => {
             <ChevronLeft style={{ width: 14, height: 14 }} />
           </button>
 
-          {/* Serial Tabs */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-            {activeSerials.map((sn, i) => (
-              <button
-                key={sn}
-                onClick={() => setSelectedSerial(sn)}
-                style={{
-                  padding: '4px 10px', height: 28,
-                  borderRadius: 'var(--radius-sm)',
-                  border: selectedSerial === sn ? '1px solid var(--color-primary)' : '1px solid var(--color-outline-variant)',
-                  background: selectedSerial === sn ? 'rgba(56,189,248,0.12)' : 'transparent',
-                  color: selectedSerial === sn ? 'var(--color-primary)' : 'var(--color-on-surface-variant)',
-                  fontSize: 10, fontWeight: 900, fontFamily: 'var(--font-mono)',
-                  cursor: 'pointer', transition: 'all 0.15s ease'
-                }}
-              >
-                {sn}
-              </button>
+          <select
+            value={selectedSerial}
+            onChange={(e) => setSelectedSerial(e.target.value)}
+            className="select-field"
+            style={{
+              height: 28,
+              minWidth: 112,
+              padding: '0 28px 0 10px',
+              fontSize: 10,
+              fontWeight: 900,
+              fontFamily: 'var(--font-mono)',
+              color: 'var(--color-primary)',
+              backgroundColor: 'rgba(56,189,248,0.10)',
+              borderColor: 'var(--color-primary)'
+            }}
+          >
+            {activeSerials.map(sn => (
+              <option key={sn} value={sn}>{sn}</option>
             ))}
-          </div>
+          </select>
 
           <button
             onClick={() => serialIndex < activeSerials.length - 1 && setSelectedSerial(activeSerials[serialIndex + 1])}
@@ -689,7 +672,7 @@ export const ModuleWorkspace: React.FC = () => {
         </div>
 
         {/* ── RIGHT DETAIL PANEL ───────────────────────────────── */}
-        <div style={{ flex: 1, overflowY: 'auto', padding: '20px 24px', display: 'flex', flexDirection: 'column', gap: 20 }}>
+        <div style={{ flex: 1, overflowY: 'auto', padding: '20px 28px 28px', display: 'flex', flexDirection: 'column', gap: 18, background: 'linear-gradient(180deg, var(--color-surface), var(--color-surface-container-low))' }}>
 
           {!activeSubStage ? (
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', color: 'var(--color-on-surface-variant)', fontSize: 13 }}>
@@ -702,7 +685,7 @@ export const ModuleWorkspace: React.FC = () => {
                 backgroundColor: 'var(--color-surface-container-lowest)',
                 border: '1px solid var(--color-outline-variant)',
                 borderRadius: 'var(--radius-sm)',
-                padding: '16px 20px',
+                padding: '18px 22px',
                 display: 'flex', flexDirection: 'column', gap: 12
               }}>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
@@ -727,7 +710,7 @@ export const ModuleWorkspace: React.FC = () => {
                         </span>
                       )}
                     </div>
-                    <h2 style={{ margin: 0, fontSize: 17, fontWeight: 900, fontFamily: 'var(--font-display)', textTransform: 'uppercase', color: 'var(--color-surface-bright)', letterSpacing: '0.04em' }}>
+                    <h2 style={{ margin: 0, fontSize: 20, fontWeight: 900, fontFamily: 'var(--font-display)', textTransform: 'uppercase', color: 'var(--color-surface-bright)', letterSpacing: '0.04em' }}>
                       {activeSubStage.name}
                     </h2>
                   </div>
@@ -910,11 +893,11 @@ export const ModuleWorkspace: React.FC = () => {
                   textTransform: 'uppercase', letterSpacing: '0.1em',
                   color: 'var(--color-on-surface-variant)'
                 }}>
-                  Inspection Metrics
+                  Quality Gate Overview
                 </div>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', padding: '12px 12px' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(170px, 1fr))', gap: 12, padding: '14px 16px' }}>
                   {/* Doc No */}
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: 3, padding: '8px 12px', borderRight: '1px solid var(--color-outline-variant)' }}>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 5, padding: '12px 14px', border: '1px solid var(--color-outline-variant)', backgroundColor: 'var(--color-surface-container-low)', borderRadius: 'var(--radius-md)' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
                       <FileText style={{ width: 10, height: 10, color: 'var(--color-on-surface-variant)' }} />
                       <span style={{ fontSize: 8, fontWeight: 700, fontFamily: 'var(--font-mono)', textTransform: 'uppercase', letterSpacing: '0.07em', color: 'var(--color-on-surface-variant)' }}>Doc No.</span>
@@ -924,7 +907,7 @@ export const ModuleWorkspace: React.FC = () => {
                     </span>
                   </div>
                   {/* Received */}
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: 3, padding: '8px 12px', borderRight: '1px solid var(--color-outline-variant)' }}>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 5, padding: '12px 14px', border: '1px solid var(--color-outline-variant)', backgroundColor: 'var(--color-surface-container-low)', borderRadius: 'var(--radius-md)' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
                       <Inbox style={{ width: 10, height: 10, color: 'var(--color-on-surface-variant)' }} />
                       <span style={{ fontSize: 8, fontWeight: 700, fontFamily: 'var(--font-mono)', textTransform: 'uppercase', letterSpacing: '0.07em', color: 'var(--color-on-surface-variant)' }}>Received Qty</span>
@@ -934,7 +917,7 @@ export const ModuleWorkspace: React.FC = () => {
                     </span>
                   </div>
                   {/* Accepted */}
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: 3, padding: '8px 12px', borderRight: '1px solid var(--color-outline-variant)' }}>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 5, padding: '12px 14px', border: '1px solid rgba(16,185,129,0.22)', backgroundColor: 'rgba(16,185,129,0.07)', borderRadius: 'var(--radius-md)' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
                       <ThumbsUp style={{ width: 10, height: 10, color: 'var(--color-on-surface-variant)' }} />
                       <span style={{ fontSize: 8, fontWeight: 700, fontFamily: 'var(--font-mono)', textTransform: 'uppercase', letterSpacing: '0.07em', color: 'var(--color-on-surface-variant)' }}>Accepted Qty</span>
@@ -944,7 +927,7 @@ export const ModuleWorkspace: React.FC = () => {
                     </span>
                   </div>
                   {/* Rejected */}
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: 3, padding: '8px 12px', borderRight: '1px solid var(--color-outline-variant)' }}>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 5, padding: '12px 14px', border: rejectedQty > 0 ? '1px solid rgba(239,68,68,0.28)' : '1px solid var(--color-outline-variant)', backgroundColor: rejectedQty > 0 ? 'rgba(239,68,68,0.07)' : 'var(--color-surface-container-low)', borderRadius: 'var(--radius-md)' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
                       <ThumbsDown style={{ width: 10, height: 10, color: 'var(--color-on-surface-variant)' }} />
                       <span style={{ fontSize: 8, fontWeight: 700, fontFamily: 'var(--font-mono)', textTransform: 'uppercase', letterSpacing: '0.07em', color: 'var(--color-on-surface-variant)' }}>Rejected Qty</span>
@@ -954,7 +937,7 @@ export const ModuleWorkspace: React.FC = () => {
                     </span>
                   </div>
                   {/* Pass % with visual circular ring */}
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: 3, padding: '8px 12px' }}>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 5, padding: '12px 14px', border: '1px solid var(--color-outline-variant)', backgroundColor: 'var(--color-surface-container-low)', borderRadius: 'var(--radius-md)' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
                       <Percent style={{ width: 10, height: 10, color: 'var(--color-on-surface-variant)' }} />
                       <span style={{ fontSize: 8, fontWeight: 700, fontFamily: 'var(--font-mono)', textTransform: 'uppercase', letterSpacing: '0.07em', color: 'var(--color-on-surface-variant)' }}>Yield Rate</span>
@@ -1000,7 +983,7 @@ export const ModuleWorkspace: React.FC = () => {
               <div style={{
                 backgroundColor: 'var(--color-surface-container-lowest)',
                 border: '1px solid var(--color-outline-variant)',
-                borderRadius: 'var(--radius-sm)',
+                borderRadius: 'var(--radius-md)',
                 overflow: 'hidden'
               }}>
                 {/* Card header bar */}
@@ -1015,7 +998,7 @@ export const ModuleWorkspace: React.FC = () => {
                     textTransform: 'uppercase', letterSpacing: '0.1em',
                     color: 'var(--color-on-surface-variant)'
                   }}>
-                    {activeSubStage.isAte ? 'ATE Report Attachments' : 'QA Report Attachments'}
+                    {activeSubStage.isAte ? 'ATE Evidence Package' : 'QA Evidence Package'}
                   </div>
                   <div style={{
                     width: 280, padding: '8px 16px',
@@ -1024,23 +1007,23 @@ export const ModuleWorkspace: React.FC = () => {
                     textTransform: 'uppercase', letterSpacing: '0.1em',
                     color: 'var(--color-on-surface-variant)'
                   }}>
-                    Review by FQA
+                    Final QA Decision
                   </div>
                 </div>
 
                 {/* Card body: split left docs + right FQA */}
                 <div style={{ display: 'flex' }}>
                   {/* Left: Documents */}
-                  <div style={{ flex: 1, padding: '14px 16px', display: 'flex', flexDirection: 'column', gap: 8 }}>
+                  <div style={{ flex: 1, padding: '16px', display: 'flex', flexDirection: 'column', gap: 10 }}>
                     {!hasDocs ? (
                       <div style={{
-                        padding: '20px 16px', borderRadius: 'var(--radius-sm)',
+                        padding: '28px 16px', borderRadius: 'var(--radius-md)',
                         border: '1px dashed var(--color-outline-variant)',
                         backgroundColor: 'var(--color-surface-container-low)',
                         display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6, textAlign: 'center'
                       }}>
                         <FileBarChart2 style={{ width: 24, height: 24, color: 'var(--color-on-surface-variant)' }} />
-                        <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--color-on-surface-variant)' }}>No reports uploaded yet</span>
+                        <span style={{ fontSize: 12, fontWeight: 800, color: 'var(--color-surface-bright)' }}>No report uploaded yet</span>
                         <span style={{ fontSize: 9, fontFamily: 'var(--font-mono)', color: 'var(--color-on-surface-variant)' }}>
                           {canUpload ? 'Click Upload Report to attach a document.' : 'This stage is not yet active.'}
                         </span>
@@ -1053,7 +1036,7 @@ export const ModuleWorkspace: React.FC = () => {
                   </div>
 
                   {/* Right: FQA review */}
-                  <div style={{ width: 280, borderLeft: '1px solid var(--color-outline-variant)', padding: '14px 16px', flexShrink: 0 }}>
+                  <div style={{ width: 320, borderLeft: '1px solid var(--color-outline-variant)', padding: '16px', flexShrink: 0, backgroundColor: 'var(--color-surface-container-low)' }}>
                     {lastDoc ? (
                       <FQAReviewCard doc={lastDoc} subStage={activeSubStage} />
                     ) : (

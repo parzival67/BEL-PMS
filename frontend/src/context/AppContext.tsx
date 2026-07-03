@@ -181,6 +181,188 @@ const createInitialStages = (): Stage[] => [
   }
 ];
 
+const inspectionProfiles = {
+  'bare-pcb': {
+    fileName: 'IGQA_BarePCB_Lot-AK-204_SN.pdf',
+    uploadedBy: 'Anita Rao',
+    uploadedRole: 'IGQA' as Role,
+    timestamp: '2026-07-01 09:42 AM',
+    fileSize: '684 KB',
+    totalItems: 24,
+    approvedCount: 24,
+    rejectedCount: 0,
+    startTime: '09:05',
+    endTime: '09:42',
+    durationMinutes: 37,
+    remarks: 'Bare PCB visual, solder-mask, track continuity, and ESD handling records verified.'
+  },
+  housing: {
+    fileName: 'IGQA_Housing_MechanicalFit_SN.pdf',
+    uploadedBy: 'Karthik Menon',
+    uploadedRole: 'IGQA' as Role,
+    timestamp: '2026-07-01 11:18 AM',
+    fileSize: '912 KB',
+    totalItems: 16,
+    approvedCount: 15,
+    rejectedCount: 1,
+    startTime: '10:30',
+    endTime: '11:18',
+    durationMinutes: 48,
+    remarks: 'One cosmetic burr logged and accepted under concession note CN-1187.'
+  },
+  'components-qa': {
+    fileName: 'IGQA_ElectricalComponents_BinCheck_SN.xlsx',
+    uploadedBy: 'Meera Nair',
+    uploadedRole: 'IGQA' as Role,
+    timestamp: '2026-07-01 02:05 PM',
+    fileSize: '428 KB',
+    totalItems: 64,
+    approvedCount: 64,
+    rejectedCount: 0,
+    startTime: '01:10',
+    endTime: '02:05',
+    durationMinutes: 55,
+    remarks: 'Component values, date codes, and MSL bake labels cross-checked against BOM.'
+  },
+  'pcb-assy': {
+    fileName: 'Assembly_PCB_Solder_AOI_SN.pdf',
+    uploadedBy: 'Ramesh Iyer',
+    uploadedRole: 'Assembly' as Role,
+    timestamp: '2026-07-02 10:10 AM',
+    fileSize: '1.1 MB',
+    totalItems: 36,
+    approvedCount: 35,
+    rejectedCount: 1,
+    startTime: '08:55',
+    endTime: '10:10',
+    durationMinutes: 75,
+    remarks: 'AOI record accepted after rework confirmation for connector J4 wetting.'
+  },
+  harnessing: {
+    fileName: 'Assembly_Harness_Continuity_SN.pdf',
+    uploadedBy: 'Divya Shah',
+    uploadedRole: 'Assembly' as Role,
+    timestamp: '2026-07-02 12:35 PM',
+    fileSize: '756 KB',
+    totalItems: 18,
+    approvedCount: 18,
+    rejectedCount: 0,
+    startTime: '11:50',
+    endTime: '12:35',
+    durationMinutes: 45,
+    remarks: 'Harness continuity, crimp pull tags, and sleeve markers verified.'
+  },
+  'mech-assy': {
+    fileName: 'Assembly_FinalMechanical_TorqueLog_SN.pdf',
+    uploadedBy: 'Vikram Singh',
+    uploadedRole: 'Assembly' as Role,
+    timestamp: '2026-07-02 03:28 PM',
+    fileSize: '802 KB',
+    totalItems: 22,
+    approvedCount: 22,
+    rejectedCount: 0,
+    startTime: '02:40',
+    endTime: '03:28',
+    durationMinutes: 48,
+    remarks: 'Torque witness marks, lockwire routing, and enclosure seal compression accepted.'
+  },
+  'env-test': {
+    fileName: 'Testing_EnvironmentalChamber_Profile_SN.pdf',
+    uploadedBy: 'Naveen Thomas',
+    uploadedRole: 'Testing' as Role,
+    timestamp: '2026-07-02 05:20 PM',
+    fileSize: '1.6 MB',
+    totalItems: 8,
+    approvedCount: 8,
+    rejectedCount: 0,
+    startTime: '01:20',
+    endTime: '05:20',
+    durationMinutes: 240,
+    remarks: 'Thermal soak, vibration hold, and post-run functional check completed.'
+  },
+  'full-sys': {
+    fileName: 'Testing_SystemCalibration_Final_SN.pdf',
+    uploadedBy: 'Farhan Ali',
+    uploadedRole: 'Testing' as Role,
+    timestamp: '2026-07-03 09:15 AM',
+    fileSize: '1.4 MB',
+    totalItems: 12,
+    approvedCount: 12,
+    rejectedCount: 0,
+    startTime: '08:10',
+    endTime: '09:15',
+    durationMinutes: 65,
+    remarks: 'Full system calibration drift is within the release threshold.'
+  },
+  'doc-audit': {
+    fileName: 'FQA_Documentation_Audit_SN.pdf',
+    uploadedBy: 'Priya Menon',
+    uploadedRole: 'Final QA' as Role,
+    timestamp: '2026-07-03 10:05 AM',
+    fileSize: '508 KB',
+    totalItems: 14,
+    approvedCount: 14,
+    rejectedCount: 0,
+    startTime: '09:35',
+    endTime: '10:05',
+    durationMinutes: 30,
+    remarks: 'Traveler, inspection reports, calibration references, and NCR closure evidence match.'
+  },
+  signoff: {
+    fileName: 'FQA_FinalRelease_Signoff_SN.pdf',
+    uploadedBy: 'QA Lead',
+    uploadedRole: 'Final QA' as Role,
+    timestamp: '2026-07-03 11:00 AM',
+    fileSize: '376 KB',
+    totalItems: 6,
+    approvedCount: 6,
+    rejectedCount: 0,
+    startTime: '10:40',
+    endTime: '11:00',
+    durationMinutes: 20,
+    remarks: 'Release sign-off packet cleared for dispatch hold point.'
+  }
+};
+
+const buildInspectionDocument = (subStage: SubStage, serialNumber: string, moduleName: string): DocumentRecord => {
+  const profile = inspectionProfiles[subStage.id as keyof typeof inspectionProfiles] ?? inspectionProfiles['bare-pcb'];
+  const rejectedCount = profile.totalItems - profile.approvedCount;
+
+  return {
+    id: `DOC-${serialNumber}-${subStage.id}`.replace(/[^A-Z0-9-]/gi, '').toUpperCase(),
+    fileName: profile.fileName.replace('_SN', `_${serialNumber}_${moduleName.replace(/[^A-Z0-9]+/gi, '')}`),
+    uploadedBy: profile.uploadedBy,
+    uploadedRole: profile.uploadedRole,
+    timestamp: profile.timestamp,
+    fileSize: profile.fileSize,
+    status: 'APPROVED',
+    remarks: profile.remarks,
+    isAte: subStage.isAte,
+    totalItems: profile.totalItems,
+    approvedCount: profile.approvedCount,
+    rejectedCount,
+    startTime: profile.startTime,
+    endTime: profile.endTime,
+    durationMinutes: profile.durationMinutes
+  };
+};
+
+const seedCompletedInspectionDocuments = (products: Product[]) => {
+  products.forEach(product => {
+    product.services.forEach(service => {
+      service.modules.forEach(module => {
+        module.stages.forEach(stage => {
+          stage.subStages.forEach(subStage => {
+            if (subStage.status === 'completed' && subStage.documentHistory.length === 0) {
+              subStage.documentHistory = [buildInspectionDocument(subStage, service.serialNumber, module.name)];
+            }
+          });
+        });
+      });
+    });
+  });
+};
+
 const mockProducts: Product[] = [
   {
     id: 'tlr-akash',
@@ -402,6 +584,8 @@ const mockProducts: Product[] = [
     ]
   }
 ];
+
+seedCompletedInspectionDocuments(mockProducts);
 
 const initialNotifications: AppNotification[] = [
   { id: '1', message: 'System Controller SN001: DSP ATE Testing is ready for upload.', timestamp: '10:45 AM', type: 'info', resolved: false },

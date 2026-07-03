@@ -130,6 +130,24 @@ export const Header: React.FC = () => {
                 <option key={p.id} value={p.id}>{p.name}</option>
               ))}
             </select>
+            {activeSerials.length > 0 && (
+              <select
+                value={activeSerials.includes(selectedSerial) ? selectedSerial : activeSerials[0]}
+                onChange={(e) => setSelectedSerial(e.target.value)}
+                className="select-field text-xs font-bold uppercase tracking-wider"
+                style={{
+                  height: '32px',
+                  minWidth: '96px',
+                  padding: '0 28px 0 8px',
+                  fontFamily: 'var(--font-mono)'
+                }}
+                title="Select serial number"
+              >
+                {activeSerials.map(sn => (
+                  <option key={sn} value={sn}>{sn}</option>
+                ))}
+              </select>
+            )}
           </div>
         )}
       </div>
