@@ -6,7 +6,7 @@ import belLogo from '../assets/BEL-Logo-PNG.png';
 
 export const WelcomeScreen: React.FC = () => {
   const { theme, setTheme, setCurrentScreen, setCurrentRole, addNotification } = useApp();
-  
+
   // State for login credentials
   const [username, setUsername] = useState('admin');
   const [password, setPassword] = useState('••••••••');
@@ -19,7 +19,7 @@ export const WelcomeScreen: React.FC = () => {
     // Set the selected operator level role
     setCurrentRole(selectedRole);
     addNotification(`Authentication successful: Logged in as [${selectedRole}]`, 'success');
-    
+
     // Proceed to product selection catalog
     setCurrentScreen('product-selection');
   };
@@ -45,12 +45,12 @@ export const WelcomeScreen: React.FC = () => {
       }}
     >
       {/* Theme Toggle in Top Right */}
-      <div 
-        style={{ 
-          position: 'absolute', 
-          top: '24px', 
+      <div
+        style={{
+          position: 'absolute',
+          top: '24px',
           right: '24px',
-          zIndex: 10 
+          zIndex: 10
         }}
       >
         <button
@@ -74,7 +74,7 @@ export const WelcomeScreen: React.FC = () => {
       </div>
 
       {/* Main Card Content */}
-      <div 
+      <div
         style={{
           display: 'flex',
           flexDirection: 'column',
@@ -97,12 +97,29 @@ export const WelcomeScreen: React.FC = () => {
         <div style={{ position: 'absolute', bottom: '-1px', left: '-1px', width: '12px', height: '12px', borderLeft: '3px solid var(--color-primary)', borderBottom: '3px solid var(--color-primary)' }} />
         <div style={{ position: 'absolute', bottom: '-1px', right: '-1px', width: '12px', height: '12px', borderRight: '3px solid var(--color-primary)', borderBottom: '3px solid var(--color-primary)' }} />
 
-        {/* BEL Logo PNG (Enlarged and scaled proportionally) */}
-        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-          <img 
-            src={belLogo} 
-            alt="BEL Logo" 
-            style={{ width: '240px', height: '70px', objectFit: 'contain' }} 
+        {/* BEL Logo Section */}
+        <div
+          style={{
+            width: 'calc(100% + 80px)', // Extends to card edges (40px padding on both sides)
+            marginTop: '-48px',          // Remove top card padding
+            marginLeft: '-40px',
+            marginRight: '-40px',
+            backgroundColor: '#ffffff',  // Always white
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center',
+            padding: '20px 0',
+            borderBottom: '1px solid var(--color-outline-variant)',
+          }}
+        >
+          <img
+            src={belLogo}
+            alt="BEL Logo"
+            style={{
+              width: '300px',
+              height: '120px',
+              objectFit: 'contain',
+            }}
           />
         </div>
 
@@ -110,17 +127,17 @@ export const WelcomeScreen: React.FC = () => {
         <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', width: '100%' }}>
           {/* Sub-label */}
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}>
-            <span 
-              className="text-xs font-mono font-black uppercase tracking-widest text-primary-color"
+            <span
+              className="text-s font-mono font-black uppercase tracking-widest text-primary-color"
             >
               Industry 4.0
             </span>
           </div>
 
           {/* Core Title (PMS Big) */}
-          <h2 
+          <h2
             className="text-3xl font-black uppercase tracking-wider text-bright"
-            style={{ 
+            style={{
               lineHeight: '1.15',
               fontFamily: 'var(--font-display)',
               margin: 0
@@ -128,21 +145,20 @@ export const WelcomeScreen: React.FC = () => {
           >
             Product Management System
             <br />
-            <span style={{ color: 'var(--color-primary)' }}>(PMS)</span>
           </h2>
         </div>
 
         {/* Login Form Console */}
         <form onSubmit={handleLoginSubmit} style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: '16px' }}>
-          
+
           {/* Username */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', textAlign: 'left', width: '100%' }}>
             <label className="text-micro font-mono uppercase font-black" style={{ color: 'var(--color-on-surface-variant)' }}>Username</label>
-            <input 
-              type="text" 
+            <input
+              type="text"
               value={username}
               onChange={(e) => setUsername(e.target.value)}
-              className="input-field" 
+              className="input-field"
               style={{ width: '100%' }}
               placeholder="Operator ID / Admin ID"
               required
@@ -152,11 +168,11 @@ export const WelcomeScreen: React.FC = () => {
           {/* Password */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', textAlign: 'left', width: '100%' }}>
             <label className="text-micro font-mono uppercase font-black" style={{ color: 'var(--color-on-surface-variant)' }}>Password</label>
-            <input 
-              type="password" 
+            <input
+              type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="input-field" 
+              className="input-field"
               style={{ width: '100%' }}
               placeholder="Security Key"
               required

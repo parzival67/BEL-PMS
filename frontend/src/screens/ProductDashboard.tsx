@@ -177,6 +177,7 @@ export const ProductDashboard: React.FC = () => {
   let qaStatusColor = qaProgress === 100 ? '#10b981' : '#9ca3af';
 
   // Calculate module-wise progress for Completion Analysis chart
+  /*
   const moduleCompletionData = [
     { label: 'POWER SUPPLY UNIT', progress: powerSupplyModule?.progress || 0 },
     { label: 'SYSTEM CONTROLLER', progress: sysControllerModule?.progress || 0 },
@@ -185,6 +186,7 @@ export const ProductDashboard: React.FC = () => {
     { label: 'FEEDBACK GEAR BOX', progress: 100 },
     { label: 'MANUAL DRIVE GEAR BOX', progress: 100 }
   ];
+  */
 
   // Helper to compute actual logged duration for each module
   const getModuleDuration = (modObj: any) => {

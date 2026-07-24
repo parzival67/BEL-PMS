@@ -6,7 +6,6 @@ import {
   Sun, 
   Moon, 
   User, 
-  QrCode, 
   Check, 
   LogOut,
   ChevronDown,
@@ -22,9 +21,8 @@ export const Header: React.FC = () => {
     setTheme,
     products,
     selectedProductId,
-    setSelectedProductId,
     selectedSerial,
-    setSelectedSerial,
+    selectedModuleId,
     notifications,
     resolveNotification,
     addNotification,
@@ -33,34 +31,22 @@ export const Header: React.FC = () => {
 
   const [showRoleDropdown, setShowRoleDropdown] = useState(false);
   const [showNotifPopover, setShowNotifPopover] = useState(false);
-  const [scanningBarcode, setScanningBarcode] = useState(false);
 
   const roles: Role[] = ['Admin', 'IGQA', 'Assembly', 'Testing', 'Final QA'];
 
   // Current active product object
   const activeProduct = products.find(p => p.id === selectedProductId);
-  const activeSerials = activeProduct?.services.map(s => s.serialNumber) || [];
-
-  const handleBarcodeScan = () => {
-    setScanningBarcode(true);
-    addNotification("Barcode reader initialized. Scanning item QR code...", "info");
-    
-    setTimeout(() => {
-      setScanningBarcode(false);
-      // Mock scanning selects Akash SN001
-      setSelectedProductId('tlr-akash');
-      setSelectedSerial('SN001');
-      addNotification("Barcode scanned successfully: Product [TLR Akash] Serial [SN001]. Loaded configuration.", "success");
-      setCurrentScreen('dashboard');
-    }, 1500);
-  };
 
   const getScreenTitle = () => {
     switch (currentScreen) {
       case 'welcome': return 'Welcome Screen';
       case 'product-selection': return 'Product Management System (PMS)';
       case 'dashboard': return 'Product Dashboard';
-      case 'workspace': return 'Module Workspace';
+      case 'workspace': {
+        const activeService = activeProduct?.services.find(s => s.serialNumber === selectedSerial);
+        const activeModule  = activeService?.modules.find(m => m.id === selectedModuleId);
+        return activeModule ? activeModule.name : 'Module Workspace';
+      }
       case 'stage-detail': return 'Stage Workspace / Upload';
       case 'qa-review': return 'QA Approvals Desk';
       case 'admin-master': return 'Master Configuration';
@@ -104,70 +90,46 @@ export const Header: React.FC = () => {
             <ArrowLeft style={{ width: 16, height: 16 }} />
           </button>
         )}
-        <h1 className="text-xl font-black uppercase tracking-wider" style={{ margin: 0 }}>
-          {getScreenTitle()}
-        </h1>
 
-        {/* Global Context Indicators (if not on welcome or catalog screen) */}
-        {currentScreen !== 'welcome' && currentScreen !== 'product-selection' && (
-          <div 
-            style={{ 
-              display: 'flex', 
-              alignItems: 'center', 
-              gap: '8px', 
-              paddingLeft: '20px', 
-              borderLeft: '1px solid var(--color-outline-variant)' 
-            }}
-          >
-            {/* Product Selector */}
-            <select
-              value={selectedProductId}
-              onChange={(e) => setSelectedProductId(e.target.value)}
-              className="select-field text-xs font-bold uppercase tracking-wider"
-              style={{ height: '32px', padding: '0 8px' }}
-            >
-              {products.map(p => (
-                <option key={p.id} value={p.id}>{p.name}</option>
-              ))}
-            </select>
-            {activeSerials.length > 0 && (
-              <select
-                value={activeSerials.includes(selectedSerial) ? selectedSerial : activeSerials[0]}
-                onChange={(e) => setSelectedSerial(e.target.value)}
-                className="select-field text-xs font-bold uppercase tracking-wider"
-                style={{
-                  height: '32px',
-                  minWidth: '96px',
-                  padding: '0 28px 0 8px',
-                  fontFamily: 'var(--font-mono)'
-                }}
-                title="Select serial number"
-              >
-                {activeSerials.map(sn => (
-                  <option key={sn} value={sn}>{sn}</option>
-                ))}
-              </select>
-            )}
-          </div>
-        )}
+        {/* Clean Breadcrumb and Title Layout */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+          {currentScreen !== 'welcome' && currentScreen !== 'product-selection' && activeProduct && (
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 9, fontFamily: 'var(--font-mono)', color: 'var(--color-on-surface-variant)', textTransform: 'uppercase', letterSpacing: '0.08em', fontWeight: 700 }}>
+              <span>Products</span>
+              <span style={{ opacity: 0.5 }}>/</span>
+              <span>{activeProduct.name}</span>
+              {selectedSerial && (
+                <>
+                  <span style={{ opacity: 0.5 }}>/</span>
+                  <span style={{
+                    backgroundColor: 'rgba(56,189,248,0.08)',
+                    color: 'var(--color-primary)',
+                    padding: '2px 8px',
+                    borderRadius: 'var(--radius-sm)',
+                    border: '1px solid rgba(56,189,248,0.15)',
+                    fontSize: 8,
+                    fontWeight: 900
+                  }}>
+                    {selectedSerial}
+                  </span>
+                </>
+              )}
+              {currentScreen === 'workspace' && (
+                <>
+                  <span style={{ opacity: 0.5 }}>/</span>
+                  <span>Module Workspace</span>
+                </>
+              )}
+            </div>
+          )}
+          <h1 className="text-xl font-black uppercase tracking-wider" style={{ margin: 0, lineHeight: 1.1 }}>
+            {getScreenTitle()}
+          </h1>
+        </div>
       </div>
 
       {/* Toolbar & Controls */}
       <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-        
-        {/* Barcode Scanner Trigger */}
-        {currentScreen !== 'welcome' && (
-          <button
-            onClick={handleBarcodeScan}
-            disabled={scanningBarcode}
-            className="btn btn-ghost"
-            style={{ height: '32px', padding: '0 12px', fontSize: '11px', display: 'flex', alignItems: 'center', gap: '6px' }}
-            title="Simulate 2D Barcode Scan"
-          >
-            <QrCode style={{ width: 14, height: 14 }} className={scanningBarcode ? 'animate-pulse text-primary-color' : ''} />
-            {scanningBarcode ? 'SCANNING...' : 'SCAN BARCODE'}
-          </button>
-        )}
 
         {/* Theme Toggle */}
         <button

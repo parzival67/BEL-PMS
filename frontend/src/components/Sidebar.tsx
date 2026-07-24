@@ -77,7 +77,7 @@ export const Sidebar: React.FC = () => {
                 className="text-base font-black uppercase tracking-widest text-bright"
                 style={{ fontFamily: 'var(--font-display)' }}
               >
-                PROMETRIX <span style={{ color: 'var(--color-primary)' }}>PMS</span>
+                BEL-<span style={{ color: 'var(--color-primary)' }}>PMS</span>
               </motion.span>
             )}
           </AnimatePresence>

@@ -137,6 +137,9 @@ interface AppContextType {
   addProduct: (name: string) => void;
   addServiceToProduct: (productId: string, serial: string) => void;
   addModuleToProduct: (productId: string, name: string) => void;
+  addSubStageToStage: (productId: string, moduleId: string, stageId: string, name: string, isAte: boolean) => void;
+  toggleSubStageAte: (productId: string, moduleId: string, stageId: string, subStageId: string) => void;
+  renameSubStage: (productId: string, moduleId: string, stageId: string, subStageId: string, newName: string) => void;
 }
 
 // ==========================================
@@ -635,6 +638,168 @@ const populateInitialAteDocument = () => {
       }
     ];
   }
+
+  // ── TLR-Akash SN001 · Cable & Harness Assembly · doc-audit (non-ATE) ──
+  const cableModule = sn001.modules[2]; // cable-assembly
+  const qaStage = cableModule?.stages.find(s => s.id === 'qa-review');
+  const docAuditSub = qaStage?.subStages.find(ss => ss.id === 'doc-audit');
+  if (docAuditSub) {
+    docAuditSub.status = 'pending_review';
+    docAuditSub.documentHistory = [
+      {
+        id: 'DOC-QA-301',
+        fileName: 'QA_DocAudit_SN001_CableHarness.pdf',
+        uploadedBy: 'Priya Menon',
+        uploadedRole: 'Final QA',
+        timestamp: '2026-07-03 09:45 AM',
+        fileSize: '508 KB',
+        status: 'PENDING',
+        isAte: false,
+        totalItems: 14,
+        approvedCount: 14,
+        rejectedCount: 0,
+        startTime: '09:10',
+        endTime: '09:45',
+        durationMinutes: 35,
+        remarks: 'Traveller, inspection reports, calibration references and NCR closures verified.'
+      }
+    ];
+  }
+
+  // ── TLR-Akash SN001 · Cable & Harness Assembly · ATE (full-sys) ──
+  const testingStage2 = cableModule?.stages.find(s => s.id === 'testing');
+  const fullSysSub = testingStage2?.subStages.find(ss => ss.id === 'full-sys');
+  if (fullSysSub) {
+    fullSysSub.status = 'pending_review';
+    fullSysSub.documentHistory = [
+      {
+        id: 'DOC-ATE-812',
+        fileName: 'ATE_SystemCalibration_SN001_CableHarness.pdf',
+        uploadedBy: 'Naveen Thomas',
+        uploadedRole: 'Testing',
+        timestamp: '2026-07-03 08:50 AM',
+        fileSize: '1.6 MB',
+        status: 'PENDING',
+        isAte: true,
+        ocrResult: 'FAIL',
+        ocrMeasurements: [
+          { parameter: 'RF Output Power', observed: '18.4', minLimit: '20.0', maxLimit: '26.0', unit: 'dBm', status: 'FAIL' },
+          { parameter: 'Signal Bandwidth', observed: '40', minLimit: '35', maxLimit: '55', unit: 'MHz', status: 'PASS' },
+          { parameter: 'Noise Floor', observed: '-92', minLimit: '-110', maxLimit: '-85', unit: 'dBm', status: 'PASS' },
+          { parameter: 'Impedance Match', observed: '52.8', minLimit: '48.0', maxLimit: '52.0', unit: 'Ω', status: 'FAIL' }
+        ],
+        checklist: [
+          { id: 'ch-rf', label: 'RF output power within transmit spec', checked: false },
+          { id: 'ch-bw', label: 'Signal bandwidth within channel allocation', checked: true },
+          { id: 'ch-nf', label: 'Noise floor cleared sensitivity threshold', checked: true },
+          { id: 'ch-imp', label: 'Impedance matching at antenna port', checked: false }
+        ],
+        totalItems: 12,
+        approvedCount: 10,
+        rejectedCount: 2,
+        startTime: '07:45',
+        endTime: '08:50',
+        durationMinutes: 65
+      }
+    ];
+  }
+
+  // ── ALNS SN101 · Antenna Control Unit · signoff (non-ATE) ──
+  const alns = mockProducts[1];
+  const alns101 = alns.services[0];
+  const antennaModule = alns101.modules[0]; // antenna-unit
+  const antennaQa = antennaModule?.stages.find(s => s.id === 'qa-review');
+  const signoffSub = antennaQa?.subStages.find(ss => ss.id === 'signoff');
+  if (signoffSub) {
+    signoffSub.status = 'pending_review';
+    signoffSub.documentHistory = [
+      {
+        id: 'DOC-FQA-055',
+        fileName: 'FQA_FinalRelease_SN101_AntennaUnit.pdf',
+        uploadedBy: 'QA Lead',
+        uploadedRole: 'Final QA',
+        timestamp: '2026-07-03 11:00 AM',
+        fileSize: '376 KB',
+        status: 'PENDING',
+        isAte: false,
+        totalItems: 6,
+        approvedCount: 6,
+        rejectedCount: 0,
+        startTime: '10:40',
+        endTime: '11:00',
+        durationMinutes: 20,
+        remarks: 'Release sign-off packet cleared for dispatch hold point.'
+      }
+    ];
+  }
+
+  // ── ALNS SN101 · RF Receiver Module · ATE full-sys pending ──
+  const receiverModule = alns101.modules[1]; // receiver-mod
+  const receiverTesting = receiverModule?.stages.find(s => s.id === 'testing');
+  const receiverFullSys = receiverTesting?.subStages.find(ss => ss.id === 'full-sys');
+  if (receiverFullSys) {
+    receiverFullSys.status = 'pending_review';
+    receiverFullSys.documentHistory = [
+      {
+        id: 'DOC-ATE-901',
+        fileName: 'ATE_SystemCalibration_SN101_RFReceiver.pdf',
+        uploadedBy: 'Farhan Ali',
+        uploadedRole: 'Testing',
+        timestamp: '2026-07-03 10:30 AM',
+        fileSize: '1.4 MB',
+        status: 'PENDING',
+        isAte: true,
+        ocrResult: 'PASS',
+        ocrMeasurements: [
+          { parameter: 'Receiver Sensitivity', observed: '-108', minLimit: '-115', maxLimit: '-90', unit: 'dBm', status: 'PASS' },
+          { parameter: 'IF Gain', observed: '24.5', minLimit: '20.0', maxLimit: '28.0', unit: 'dB', status: 'PASS' },
+          { parameter: 'Image Rejection', observed: '62', minLimit: '55', maxLimit: '80', unit: 'dB', status: 'PASS' },
+          { parameter: 'LO Leakage', observed: '-48', minLimit: '-60', maxLimit: '-40', unit: 'dBm', status: 'PASS' }
+        ],
+        checklist: [
+          { id: 'ch-sens', label: 'Receiver sensitivity within threshold', checked: true },
+          { id: 'ch-gain', label: 'IF chain gain within tolerance', checked: true },
+          { id: 'ch-imr', label: 'Image rejection meets spec', checked: true },
+          { id: 'ch-lo', label: 'LO leakage within permissible limit', checked: true }
+        ],
+        totalItems: 12,
+        approvedCount: 12,
+        rejectedCount: 0,
+        startTime: '09:30',
+        endTime: '10:30',
+        durationMinutes: 60
+      }
+    ];
+  }
+
+  // ── T90 SN401 · Ballistic Computer · PCB Solder (non-ATE) ──
+  const t90 = mockProducts[2];
+  const t90sn401 = t90.services[0];
+  const ballisticModule = t90sn401.modules[1]; // ballistic-computer
+  const ballisticAssembly = ballisticModule?.stages.find(s => s.id === 'assembly');
+  const mechAssySub = ballisticAssembly?.subStages.find(ss => ss.id === 'mech-assy');
+  if (mechAssySub) {
+    mechAssySub.status = 'pending_review';
+    mechAssySub.documentHistory = [
+      {
+        id: 'DOC-ASSY-540',
+        fileName: 'Assembly_MechAssy_SN401_BallisticComputer.pdf',
+        uploadedBy: 'Vikram Singh',
+        uploadedRole: 'Assembly',
+        timestamp: '2026-07-03 07:55 AM',
+        fileSize: '802 KB',
+        status: 'PENDING',
+        isAte: false,
+        totalItems: 22,
+        approvedCount: 21,
+        rejectedCount: 1,
+        startTime: '07:05',
+        endTime: '07:55',
+        durationMinutes: 50,
+        remarks: 'Torque records verified. One fastener concession raised under NCR-2291.'
+      }
+    ];
+  }
 };
 populateInitialAteDocument();
 
@@ -1028,6 +1193,87 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     addNotification(`Config: Added module ${name} to product ${productId.toUpperCase()}.`, 'info');
   };
 
+  const addSubStageToStage = (productId: string, moduleId: string, stageId: string, name: string, isAte: boolean) => {
+    const id = name.toLowerCase().replace(/[^a-z0-9]+/g, '-') + '-' + Date.now().toString(36);
+    setProducts(prev => prev.map(p => {
+      if (p.id !== productId) return p;
+      return {
+        ...p,
+        services: p.services.map(s => ({
+          ...s,
+          modules: s.modules.map(m => {
+            if (m.id !== moduleId) return m;
+            return {
+              ...m,
+              stages: m.stages.map(st => {
+                if (st.id !== stageId) return st;
+                return {
+                  ...st,
+                  subStages: [...st.subStages, { id, name, status: 'inactive' as const, isAte, documentHistory: [] }]
+                } as Stage;
+              })
+            } as Module;
+          })
+        }))
+      } as Product;
+    }));
+    addNotification(`Config: Sub-stage "${name}" added to ${stageId.toUpperCase()}${isAte ? ' [ATE]' : ''}.`, 'info');
+  };
+
+  const toggleSubStageAte = (productId: string, moduleId: string, stageId: string, subStageId: string) => {
+    setProducts(prev => prev.map(p => {
+      if (p.id !== productId) return p;
+      return {
+        ...p,
+        services: p.services.map(s => ({
+          ...s,
+          modules: s.modules.map(m => {
+            if (m.id !== moduleId) return m;
+            return {
+              ...m,
+              stages: m.stages.map(st => {
+                if (st.id !== stageId) return st;
+                return {
+                  ...st,
+                  subStages: st.subStages.map(ss =>
+                    ss.id === subStageId ? { ...ss, isAte: !ss.isAte } : ss
+                  )
+                } as Stage;
+              })
+            } as Module;
+          })
+        }))
+      } as Product;
+    }));
+  };
+
+  const renameSubStage = (productId: string, moduleId: string, stageId: string, subStageId: string, newName: string) => {
+    setProducts(prev => prev.map(p => {
+      if (p.id !== productId) return p;
+      return {
+        ...p,
+        services: p.services.map(s => ({
+          ...s,
+          modules: s.modules.map(m => {
+            if (m.id !== moduleId) return m;
+            return {
+              ...m,
+              stages: m.stages.map(st => {
+                if (st.id !== stageId) return st;
+                return {
+                  ...st,
+                  subStages: st.subStages.map(ss =>
+                    ss.id === subStageId ? { ...ss, name: newName } : ss
+                  )
+                } as Stage;
+              })
+            } as Module;
+          })
+        }))
+      } as Product;
+    }));
+  };
+
   // Sync state between selected service and module lists
   useEffect(() => {
     const product = products.find(p => p.id === selectedProductId);
@@ -1070,7 +1316,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         reviewDocument,
         addProduct,
         addServiceToProduct,
-        addModuleToProduct
+        addModuleToProduct,
+        addSubStageToStage,
+        toggleSubStageAte,
+        renameSubStage
       }}
     >
       {children}

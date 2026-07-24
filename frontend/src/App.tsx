@@ -57,7 +57,7 @@ const AppContent: React.FC = () => {
       className="text-micro font-mono"
     >
       <span style={{ fontWeight: 700 }}>
-        Developed by Central Manufacturing Technology Institute
+        Developed by <span style={{ fontWeight: 400 }}>Central Manufacturing Technology Institute</span>
       </span>
     </div>
   );
